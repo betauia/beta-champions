@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: json-api
+  namespace: beta-champions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: json-api
+  template:
+    metadata:
+      labels:
+        app: json-api
+    spec:
+      serviceAccountName: api-sa
+      containers:
+        - name: api
+          image: json-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: NAMESPACE
+              value: beta-champions
+            - name: WORKER_IMAGE
+              value: json-worker:latest
+            - name: API_URL
+              value: http://json-api:8000
+            - name: PVC_NAME
+              value: shared-data-pvc
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+      volumes:
+        - name: shared-data
+          persistentVolumeClaim:
+            claimName: shared-data-pvc
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: json-api
+  namespace: beta-champions
+spec:
+  selector:
+    app: json-api
+  ports:
+    - port: 8000
+      targetPort: 8000

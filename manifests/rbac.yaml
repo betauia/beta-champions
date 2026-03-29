@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: api-sa
+  namespace: beta-champions
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: job-role
+  namespace: beta-champions
+rules:
+  - apiGroups: ["batch"]
+    resources: ["jobs"]
+    verbs: ["create", "get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: job-rolebinding
+  namespace: beta-champions
+subjects:
+  - kind: ServiceAccount
+    name: api-sa
+roleRef:
+  kind: Role
+  name: job-role
+  apiGroup: rbac.authorization.k8s.io
