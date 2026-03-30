@@ -4,6 +4,8 @@ from pathlib import Path
 import json
 import uuid
 import shutil
+from sqlalchemy import text
+from db import SessionLocal
 
 app = FastAPI()
 
@@ -41,6 +43,16 @@ def root():
 @app.get("/health")
 def health():
     return {"ok": True}
+
+
+@app.get("/health/db")
+def health_db():
+    try:
+        with SessionLocal() as db:
+            result = db.execute(text("select 1 as ok")).mappings().first()
+        return {"ok": True, "db": result["ok"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/bots")

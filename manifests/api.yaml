@@ -19,19 +19,26 @@ spec:
           image: json-api:latest
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8000
-          env:
-            - name: NAMESPACE
-              value: beta-champions
-            - name: WORKER_IMAGE
-              value: json-worker:latest
-            - name: API_URL
-              value: http://json-api:8000
-            - name: PVC_NAME
-              value: shared-data-pvc
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - secretRef:
+                name: postgres-secret
           volumeMounts:
             - name: shared-data
               mountPath: /data
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
       volumes:
         - name: shared-data
           persistentVolumeClaim:
@@ -44,8 +51,10 @@ metadata:
   name: json-api
   namespace: beta-champions
 spec:
+  type: ClusterIP
   selector:
     app: json-api
   ports:
-    - port: 8000
-      targetPort: 8000
+    - name: http
+      port: 8000
+      targetPort: http
