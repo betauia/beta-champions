@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: battle-worker
+  namespace: beta-champions
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: battle-worker
+  template:
+    metadata:
+      labels:
+        app: battle-worker
+    spec:
+      containers:
+        - name: worker
+          image: json-worker:latest
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: API_URL
+              value: http://json-api:8000
+            - name: DATA_DIR
+              value: /data
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+      volumes:
+        - name: shared-data
+          persistentVolumeClaim:
+            claimName: shared-data-pvc
